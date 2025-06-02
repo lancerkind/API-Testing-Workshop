@@ -14,4 +14,14 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+    <dependencies>
+        <!-- Add your dependencies here if needed -->
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Add your plugins here if needed -->
+        </plugins>
+    </build>
+
 </project>

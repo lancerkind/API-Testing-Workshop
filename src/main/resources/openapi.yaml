@@ -1,0 +1,137 @@
+openapi: 3.0.3
+info:
+  title: Invoice API
+  description: |
+    A simple API for managing invoices as described in the README.
+    This API demonstrates the concepts of API testing with consumer and producer contracts.
+  version: 1.0.0
+  
+servers:
+  - url: http://localhost:8080
+    description: Local development server
+    
+paths:
+  /api/health:
+    get:
+      summary: Health check endpoint
+      description: Returns the health status of the API
+      operationId: getHealth
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: UP
+                    
+  /api/invoices:
+    get:
+      summary: Get all invoices
+      description: Returns a list of all invoices
+      operationId: getInvoices
+      parameters:
+        - name: id
+          in: query
+          description: ID of the invoice to retrieve
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/InvoiceList'
+                  - $ref: '#/components/schemas/Invoice'
+        '404':
+          description: Invoice not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+                
+    post:
+      summary: Create a new invoice
+      description: Creates a new invoice with the provided data
+      operationId: createInvoice
+      requestBody:
+        description: Invoice object to be created
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvoiceRequest'
+        required: true
+      responses:
+        '201':
+          description: Invoice created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invoice'
+                
+components:
+  schemas:
+    Invoice:
+      type: object
+      properties:
+        id:
+          type: string
+          example: INV-001
+        customer:
+          type: string
+          example: Acme Corp
+        amount:
+          type: number
+          format: double
+          example: 1250.00
+        date:
+          type: string
+          format: date
+          example: 2023-01-15
+        status:
+          type: string
+          enum: [NEW, PENDING, PAID]
+          example: PAID
+      required:
+        - id
+        - customer
+        - amount
+        - date
+        - status
+          
+    InvoiceList:
+      type: array
+      items:
+        $ref: '#/components/schemas/Invoice'
+        
+    InvoiceRequest:
+      type: object
+      properties:
+        customer:
+          type: string
+          example: New Customer
+        amount:
+          type: number
+          format: double
+          example: 500.00
+        date:
+          type: string
+          format: date
+          example: 2023-03-01
+      required:
+        - customer
+        - amount
+        - date
+        
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+          example: Invoice not found
