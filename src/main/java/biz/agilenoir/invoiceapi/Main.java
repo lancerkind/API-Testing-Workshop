@@ -20,14 +20,18 @@ import java.util.Map;
 public class Main {
     // In-memory storage for invoices
     private static final List<Map<String, Object>> invoices = new ArrayList<>();
-    private static final int portNumber = 8090;
+    private int portNumber;
 
     public static void main(String[] args) throws IOException {
+        Main main = new Main();
+        if( args.length != 1 ) main.portNumber = 8090;
+        else main.portNumber = Integer.parseInt(args[0]);
+
         // Initialize with some sample data
         initializeSampleData();
 
         // Create HTTP server on port
-        HttpServer server = HttpServer.create(new InetSocketAddress(portNumber), 0);
+        HttpServer server = HttpServer.create(new InetSocketAddress(main.portNumber), 0);
 
         // Define API endpoints
         server.createContext("/api/invoices", new InvoiceHandler());
@@ -37,7 +41,7 @@ public class Main {
         server.setExecutor(null);
         server.start();
 
-        System.out.println("API Server started on port " + portNumber );
+        System.out.println("API Server started on port " + main.portNumber );
         System.out.println("Available endpoints:");
         System.out.println("  GET  /api/health - Health check endpoint");
         System.out.println("  GET  /api/invoices - List all invoices");

@@ -15,8 +15,9 @@ import static org.hamcrest.Matchers.*;
  * This class provides functionality to test the API endpoints using RestAssured.
  */
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-public class ApiTestClient {
-    private static final String BASE_URL = "http://localhost:8090";
+public class InvoiceTest {
+    private static final int portNumber = 8091;
+    private static final String BASE_URL = "http://localhost:" + portNumber;
     private static Thread serverThread;
 
     @BeforeAll
@@ -24,8 +25,10 @@ public class ApiTestClient {
         // Start the API server
         System.out.println("Starting API server...");
         serverThread = new Thread(() -> {
+            String[] args = new String[1];
+            args[0] = String.valueOf(portNumber);
             try {
-                Main.main(new String[]{});
+                Main.main(args);
             } catch (IOException e) {
                 e.printStackTrace();
             }

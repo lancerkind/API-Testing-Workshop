@@ -3,14 +3,11 @@ Here is a lab which illustrates the "Why" of certain levels of testing, along wi
 illustrate "How."  
 
 This particular workshop will use the following tools:
-* Java for the implementation language 
-* SpringBoot for implementing the API with microservices
+* Java for the implementation language
 * RestAssured for testing the API
-* WireMock for reducing upstream dependencies
 * OpenAPI for specifying the API
 
 # Getting Started
-
 This repository contains a simple API application that demonstrates the concepts described below.
 
 ## Project Structure
