@@ -11,7 +11,7 @@ import org.junit.jupiter.api.DisplayName;
 
 import java.io.IOException;
 
-public class OpenApiValidationTest {
+public class InvoiceSchemaTest {
     private static final int portNumber = 8090;
     private static final String BASE_URL = "http://localhost:" + portNumber;
     private static Thread serverThread;

@@ -11,9 +11,12 @@ This particular workshop will use the following tools:
 This repository contains a simple API application that demonstrates the concepts described below.
 
 ## Project Structure
-- `src/main/java/biz/agilenoir/invoiceapi/Main.java` - The main application that implements a simple invoice API
-- `src/test/java/biz/agilenoir/invoiceapi/contract/ApiTestClient.java` - A test client that demonstrates how to test the API
 - `src/main/resources/openapi.yaml` - OpenAPI specification for the API
+- `src/main/java/biz/agilenoir/invoiceapi/Main.java` - The main application that implements a simple invoice API
+- `src/test/java/biz/agilenoir/invoiceapi/contract/InvoiceTest.java` - A test that demonstrates how to test the 
+contract from the API producer's perspective.
+- `src/test/java/biz/agilenoir/invoiceapi/apischemavalidation/InvoiceSchemaTest.java` - A test that checks that the 
+schema is correctly represented by the controller.
 
 ## Running the Application
 To run the application:
@@ -22,7 +25,7 @@ javac src/main/java/biz/agilenoir/invoiceapi/Main.java
 java -cp src/main/java biz.agilenoir.invoiceapi.Main
 ```
 
-The server will start on port 8080 with the following endpoints:
+The server will start on port 8090 (default, or pass a port number as an argument) with the following endpoints:
 - `GET /api/health` - Health check endpoint
 - `GET /api/invoices` - List all invoices
 - `GET /api/invoices?id={id}` - Get invoice by ID
@@ -31,8 +34,7 @@ The server will start on port 8080 with the following endpoints:
 ## Running the Tests
 To run the tests:
 ```
-javac -cp src/main/java src/test/java/biz/agilenoir/ApiTestClient.java
-java -cp src/main/java:src/test/java biz.agilenoir.ApiTestClient
+maven test
 ```
 
 The test client will start the server, run tests against all endpoints, and verify the responses.
