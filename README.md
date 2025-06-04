@@ -4,9 +4,9 @@ illustrate "How."
 
 This particular workshop will use the following tools:
 * Java for the implementation language
-* RestAssured for testing the API
 * OpenAPI for specifying the API
-
+* RestAssured for testing the API
+* WireMock for creating a virtual service for upstream dependencies
 
 # Getting Started
 This repository contains a simple API application that demonstrates the concepts described below.
