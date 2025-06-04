@@ -8,6 +8,10 @@ This particular workshop will use the following tools:
 * RestAssured for testing the API
 * WireMock for creating a virtual service for upstream dependencies
 
+# If you want to "kick the tires"
+If you simply want to run the tests and see if everything is in place and working, clone the repo, go to the root and run "mvn test".
+The tests assume that port 8090 and 8091 are free.
+
 # Getting Started
 This repository contains a simple API application that demonstrates the concepts described below.
 
