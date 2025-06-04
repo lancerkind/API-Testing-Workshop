@@ -6,7 +6,7 @@ target/
 ### IntelliJ IDEA ###
 .idea/**
 !.idea/.gitignore
-
+.idea/misc.xml
 *.iws
 *.iml
 *.ipr

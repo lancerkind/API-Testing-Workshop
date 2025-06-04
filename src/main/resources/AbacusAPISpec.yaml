@@ -1,0 +1,87 @@
+openapi: 3.0.3
+info:
+  title: Abacus API
+  description: |
+    A simple API for processing invoices through the Abacus system.
+    This API accepts InvoiceRequest objects and processes them.
+  version: 1.0.0
+  
+servers:
+  - url: http://localhost:8092
+    description: Local development server
+    
+paths:
+  /api/health:
+    get:
+      summary: Health check endpoint
+      description: Returns the health status of the API
+      operationId: getHealth
+      responses:
+        '200':
+          description: Successful operation
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: UP
+                    
+  /api/process:
+    post:
+      summary: Process an invoice
+      description: Processes an invoice through the Abacus system
+      operationId: processInvoice
+      requestBody:
+        description: Invoice object to be processed
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvoiceRequest'
+        required: true
+      responses:
+        '200':
+          description: Invoice processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProcessResponse'
+                
+components:
+  schemas:
+    InvoiceRequest:
+      type: object
+      properties:
+        customer:
+          type: string
+          example: New Customer
+        amount:
+          type: number
+          format: double
+          example: 500.00
+        date:
+          type: string
+          format: date
+          example: 2023-03-01
+      required:
+        - customer
+        - amount
+        - date
+        
+    ProcessResponse:
+      type: object
+      properties:
+        transactionId:
+          type: string
+          example: TRX-12345
+        status:
+          type: string
+          enum: [ACCEPTED, REJECTED, PENDING_REVIEW]
+          example: ACCEPTED
+        message:
+          type: string
+          example: Invoice processed successfully
+      required:
+        - transactionId
+        - status
