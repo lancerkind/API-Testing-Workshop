@@ -53,6 +53,8 @@ public class Main {
      * Initialize sample invoice data
      */
     private static void initializeSampleData() {
+        invoices.clear();
+
         // Sample invoice 1
         Map<String, Object> invoice1 = new HashMap<>();
         invoice1.put("id", "INV-001");

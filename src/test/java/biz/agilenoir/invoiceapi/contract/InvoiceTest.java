@@ -3,6 +3,7 @@ package biz.agilenoir.invoiceapi.contract;
 import biz.agilenoir.invoiceapi.Main;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
+import io.restassured.response.Response;
 import org.junit.jupiter.api.*;
 
 import java.io.IOException;
@@ -73,7 +74,17 @@ public class InvoiceTest {
     @DisplayName("Test get all invoices")
     public void testGetAllInvoices() {
         System.out.println("\nTesting get all invoices:");
-        
+
+        Response response =
+                given()
+                        .when()
+                        .get("/api/invoices");
+
+        // Print the response body
+        System.out.println("Response Body:");
+        System.out.println(response.getBody().asString());
+
+
         given()
             .when()
             .get("/api/invoices")

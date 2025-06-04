@@ -7,6 +7,7 @@ This particular workshop will use the following tools:
 * RestAssured for testing the API
 * OpenAPI for specifying the API
 
+
 # Getting Started
 This repository contains a simple API application that demonstrates the concepts described below.
 
@@ -61,16 +62,19 @@ being wasteful of time and effort, they realize they need to work together in so
 * Ledgerlicious will use WireMock to allow most tests to run independently of Abacus
 
 ### More details about this way of working
-- Razzmatazz creates consumer tests with RestAssured that will confirm that the endpoint that Ledgerlicious creates follow 
-the schema in the OpenAI Spec they produced. For now, they implement and check in the tests (test driven development at the 
-API layer). Because the tests fail in CI (the API is yet to be developed), they are marked with pending/ignore for now. 
-(For the meantime, Razzmatazz isn’t blocked from continuing to work, so they build out the view layer using client 
-objects—built from OpenAPI spec—that will be loaded with data once the api is produced.)
-- Ledgerlicious creates producer tests with RestAssured that will confirm the API functionality works at the contract level. 
+- Razzmatazz creates consumer tests with RestAssured that will confirm that the endpoint that Ledgerlicious creates 
+follows the API contract (schema in the OpenAI Spec) that they depend on. They do this out of repsonsibility to the 
+users of their product. For now, Razzmatazz implements and checks in the tests (test driven development at the 
+API layer). Because the tests fail in CI (the API is yet to be developed), they are marked with pending/ignore for now.
+For the meantime, Razzmatazz isn’t blocked from continuing to work, so they build out the view layer using client 
+objects—built from OpenAPI spec—that will be loaded with data once the api is produced. Sometimes they discover a
+problem with the API spec and go back and talk to Ledgerlicious about changes in the spec.
+- Ledgerlicious creates producer tests with RestAssured that will confirm the API functionality works at the contract level.
+They will test the entire contract they offer for all consumers, not just Razzmatazz. 
 The tests fail for the meantime as the API has yet to be built so these tests will be marked as pending/ignored so 
 their CI system doesn’t declare the build as broken.
-- Day by day, Ledgerlicious will implement the API by performing TDD: create unit tests and functional tests. These
-tests will be run in their CI environment.
+- Day by day, Ledgerlicious will implement the API by performing TDD: create unit tests and acceptance tests. These
+tests will be run into their CI environment.
 - Ledgerlicious has a dependency on data provided by team Abacus. Abacus is a slow legacy system which would greatly impact 
 the speed of Ledgerlicious’s producer tests, so they mock this upstream dependency with WireMock.
 
