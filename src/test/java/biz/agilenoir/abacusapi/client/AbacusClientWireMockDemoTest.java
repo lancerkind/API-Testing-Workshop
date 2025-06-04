@@ -17,7 +17,7 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Test for the AbacusAPI client using WireMock
  */
-public class AbacusClientTest {
+public class AbacusClientWireMockDemoTest {
     private WireMockServer wireMockServer;
     private AbacusClient abacusClient;
 
