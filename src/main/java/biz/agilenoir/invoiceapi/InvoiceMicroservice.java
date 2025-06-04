@@ -13,25 +13,25 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Simple API Workshop Application
+ * Simple Invoice Microservice Application
  * This application demonstrates a basic REST API using Java's built-in HttpServer.
  * It implements a simple invoice management system as described in the README.
  */
-public class Main {
+public class InvoiceMicroservice {
     // In-memory storage for invoices
     private static final List<Map<String, Object>> invoices = new ArrayList<>();
     private int portNumber;
 
     public static void main(String[] args) throws IOException {
-        Main main = new Main();
-        if( args.length != 1 ) main.portNumber = 8090;
-        else main.portNumber = Integer.parseInt(args[0]);
+        InvoiceMicroservice invoiceMicroservice = new InvoiceMicroservice();
+        if( args.length != 1 ) invoiceMicroservice.portNumber = 8090;
+        else invoiceMicroservice.portNumber = Integer.parseInt(args[0]);
 
         // Initialize with some sample data
         initializeSampleData();
 
         // Create HTTP server on port
-        HttpServer server = HttpServer.create(new InetSocketAddress(main.portNumber), 0);
+        HttpServer server = HttpServer.create(new InetSocketAddress(invoiceMicroservice.portNumber), 0);
 
         // Define API endpoints
         server.createContext("/api/invoices", new InvoiceHandler());
@@ -41,7 +41,7 @@ public class Main {
         server.setExecutor(null);
         server.start();
 
-        System.out.println("API Server started on port " + main.portNumber );
+        System.out.println("API Server started on port " + invoiceMicroservice.portNumber );
         System.out.println("Available endpoints:");
         System.out.println("  GET  /api/health - Health check endpoint");
         System.out.println("  GET  /api/invoices - List all invoices");

@@ -1,6 +1,6 @@
 package biz.agilenoir.invoiceapi.contract;
 
-import biz.agilenoir.invoiceapi.Main;
+import biz.agilenoir.invoiceapi.InvoiceMicroservice;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
@@ -29,7 +29,7 @@ public class InvoiceTest {
             String[] args = new String[1];
             args[0] = String.valueOf(portNumber);
             try {
-                Main.main(args);
+                InvoiceMicroservice.main(args);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -59,7 +59,7 @@ public class InvoiceTest {
     @DisplayName("Test health endpoint")
     public void testHealthEndpoint() {
         System.out.println("\nTesting health endpoint:");
-        
+
         given()
             .when()
             .get("/api/health")
@@ -101,7 +101,7 @@ public class InvoiceTest {
     @DisplayName("Test get invoice by ID")
     public void testGetInvoiceById() {
         System.out.println("\nTesting get invoice by ID:");
-        
+
         given()
             .when()
             .get("/api/invoices?id=INV-001")
@@ -118,7 +118,7 @@ public class InvoiceTest {
     @DisplayName("Test get non-existent invoice")
     public void testGetNonExistentInvoice() {
         System.out.println("\nTesting get non-existent invoice:");
-        
+
         given()
             .when()
             .get("/api/invoices?id=INV-999")
@@ -133,7 +133,7 @@ public class InvoiceTest {
     @DisplayName("Test create new invoice")
     public void testCreateInvoice() {
         System.out.println("\nTesting create new invoice:");
-        
+
         given()
             .when()
             .post("/api/invoices")

@@ -27,7 +27,7 @@ schema is correctly represented by the controller.
 To run the application:
 ```
 javac src/main/java/biz/agilenoir/invoiceapi/Main.java
-java -cp src/main/java biz.agilenoir.invoiceapi.Main
+java -cp src/main/java biz.agilenoir.invoiceapi.InvoiceMicroservice
 ```
 
 The server will start on port 8090 (default, or pass a port number as an argument) with the following endpoints:

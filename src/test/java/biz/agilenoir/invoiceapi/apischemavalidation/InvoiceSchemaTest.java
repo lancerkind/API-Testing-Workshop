@@ -3,7 +3,7 @@ package biz.agilenoir.invoiceapi.apischemavalidation;
 import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInClasspath;
 import static io.restassured.RestAssured.*;
 
-import biz.agilenoir.invoiceapi.Main;
+import biz.agilenoir.invoiceapi.InvoiceMicroservice;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -23,7 +23,7 @@ public class InvoiceSchemaTest {
         serverThread = new Thread(() -> {
 
             try {
-                Main.main(new String[]{String.valueOf(portNumber)});
+                InvoiceMicroservice.main(new String[]{String.valueOf(portNumber)});
             } catch (IOException e) {
                 e.printStackTrace();
             }
