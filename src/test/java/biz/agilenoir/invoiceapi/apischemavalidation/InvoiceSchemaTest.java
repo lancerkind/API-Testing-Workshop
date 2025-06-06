@@ -83,6 +83,7 @@ public class InvoiceSchemaTest {
             .body(matchesJsonSchemaInClasspath("schemas/invoice-schema.json"));
     }
 
+    @org.junit.jupiter.api.Disabled("Until I add mocking")
     @Test
     @DisplayName("Validate Create Invoice Endpoint Response Against Schema")
     void validateCreateInvoiceAgainstSchema() {

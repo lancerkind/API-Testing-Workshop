@@ -18,6 +18,7 @@ public class AbacusClient {
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
 
+    public String getBasePath() { return basePath; }
     /**
      * Constructor
      * @param basePath The base path of the API

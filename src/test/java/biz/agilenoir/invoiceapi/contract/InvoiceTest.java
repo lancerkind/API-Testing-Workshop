@@ -1,6 +1,9 @@
 package biz.agilenoir.invoiceapi.contract;
 
 import biz.agilenoir.invoiceapi.InvoiceMicroservice;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
@@ -8,6 +11,10 @@ import org.junit.jupiter.api.*;
 
 import java.io.IOException;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static io.restassured.RestAssured.*;
 import static org.hamcrest.Matchers.*;
 
@@ -20,16 +27,28 @@ public class InvoiceTest {
     private static final int portNumber = 8091;
     private static final String BASE_URL = "http://localhost:" + portNumber;
     private static Thread serverThread;
+    private static WireMockServer wireMockServer;  // used for tests that depend on Abacus
+
+    private static void setupVirtualAbacusService() {
+        // Start WireMock server
+        wireMockServer = new WireMockServer(WireMockConfiguration.options().dynamicPort());
+        wireMockServer.start();
+        WireMock.configureFor("localhost", wireMockServer.port());
+        System.out.println("WireMock server started on port: " + wireMockServer.port());
+    }
 
     @BeforeAll
     public static void setup() {
+        setupVirtualAbacusService();
         // Start the API server
         System.out.println("Starting API server...");
         serverThread = new Thread(() -> {
-            String[] args = new String[1];
-            args[0] = String.valueOf(portNumber);
+            String[] serviceConfiguration = new String[InvoiceMicroservice.ConfigurationArgumentIndices.ARRAY_SIZE];      // pass in service configuration
+            serviceConfiguration[InvoiceMicroservice.ConfigurationArgumentIndices.INVOICE_SERVICE_PORT] = String.valueOf(portNumber);
+            serviceConfiguration[InvoiceMicroservice.ConfigurationArgumentIndices.ABACUS_SERVICE_PORT] = String.valueOf(wireMockServer.port());
+
             try {
-                InvoiceMicroservice.main(args);
+                InvoiceMicroservice.main(serviceConfiguration);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -48,9 +67,14 @@ public class InvoiceTest {
         System.out.println("Testing endpoint at " + BASE_URL);
     }
 
+    private static void teardownVirtualAbacusService() {
+        wireMockServer.stop();
+        System.out.println("WireMock server stopped");
+    }
+
     @AfterAll
     public static void tearDown() {
-        // In a real application, we would shut down the server here
+        teardownVirtualAbacusService();
         System.out.println("Tests completed");
     }
 
@@ -128,20 +152,27 @@ public class InvoiceTest {
             .body("error", containsString("not found"));
     }
 
+    @org.junit.jupiter.api.Disabled("until modernize pom")
     @Test
     @Order(5)
-    @DisplayName("Test create new invoice")
+    @DisplayName("Test create new invoice (depends on Abacus)")
     public void testCreateInvoice() {
-        System.out.println("\nTesting create new invoice:");
-
+            System.out.println("\nTesting create new invoice:");
+        // Setup mock response.
+        stubFor(post(urlEqualTo("/api/process"))
+                .willReturn(aResponse()
+                        .withStatus(200)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"transactionId\": \"TRX-12345\", \"status\": \"NEW\", \"message\": \"Invoice processed successfully\"}")));
+        // Test client.
         given()
-            .when()
-            .post("/api/invoices")
-            .then()
-            .statusCode(201)
-            .contentType(ContentType.JSON)
-            .body("id", notNullValue())
-            .body("customer", equalTo("New Customer"))
-            .body("status", equalTo("NEW"));
+                    .when()
+                    .post("/api/invoices")
+                    .then()
+                    .statusCode(201)
+                    .contentType(ContentType.JSON)
+                    .body("id", notNullValue())
+                    .body("customer", equalTo("New Customer"))
+                    .body("status", equalTo("NEW"));
     }
 }

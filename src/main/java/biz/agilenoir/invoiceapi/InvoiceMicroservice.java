@@ -1,16 +1,22 @@
 package biz.agilenoir.invoiceapi;
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
-import com.sun.net.httpserver.HttpServer;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.sun.net.httpserver.*;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import biz.agilenoir.abacusapi.client.AbacusClient;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * Simple Invoice Microservice Application
@@ -18,14 +24,26 @@ import java.util.Map;
  * It implements a simple invoice management system as described in the README.
  */
 public class InvoiceMicroservice {
+
+    public static class ConfigurationArgumentIndices {
+        public static final int ARRAY_SIZE = 2;  // If adding more indices, increase this number
+        public static final int INVOICE_SERVICE_PORT = 0;
+        public static final int ABACUS_SERVICE_PORT = 1;
+    }
+
     // In-memory storage for invoices
     private static final List<Map<String, Object>> invoices = new ArrayList<>();
     private int portNumber;
+    private static int abacusPortNumber;
 
-    public static void main(String[] args) throws IOException {
+    /**
+     * Service entry point. AKA a "main."
+     * @param configurationSettings first array element is port number for InvoiceMicroservice. The second element is for Abacus.
+     * @throws IOException Raised if there is a network problem.
+     */
+    public static void main(String[] configurationSettings) throws IOException {
         InvoiceMicroservice invoiceMicroservice = new InvoiceMicroservice();
-        if( args.length != 1 ) invoiceMicroservice.portNumber = 8090;
-        else invoiceMicroservice.portNumber = Integer.parseInt(args[0]);
+        processConfigurationSettings(configurationSettings, invoiceMicroservice);
 
         // Initialize with some sample data
         initializeSampleData();
@@ -47,6 +65,129 @@ public class InvoiceMicroservice {
         System.out.println("  GET  /api/invoices - List all invoices");
         System.out.println("  GET  /api/invoices?id={id} - Get invoice by ID");
         System.out.println("  POST /api/invoices - Create a new invoice (send JSON in request body)");
+//        testingWireMockClient();  // delete this and the method when satisfied as this is for debugging perposes.
+    }
+
+    private static void testingWireMockClient() throws IOException {
+        new InvoiceHandler().callAbacus(new HttpExchange() {
+            @Override
+            public Headers getRequestHeaders() {
+                return null;
+            }
+
+            @Override
+            public Headers getResponseHeaders() {
+                return null;
+            }
+
+            @Override
+            public URI getRequestURI() {
+                return null;
+            }
+
+            @Override
+            public String getRequestMethod() {
+                return "";
+            }
+
+            @Override
+            public HttpContext getHttpContext() {
+                return null;
+            }
+
+            @Override
+            public void close() {
+
+            }
+
+            @Override
+            public InputStream getRequestBody() {
+                /*
+                schemas:
+                InvoiceRequest:
+                type: object
+                properties:
+                customer:
+                type: string
+                example: New Customer
+                amount:
+                type: number
+                format: double
+                example: 500.00
+                date:
+                type: string
+                format: date
+                example: 2023-03-01
+                required:
+                        - customer
+                        - amount
+                        - date
+                 */
+                return new ByteArrayInputStream("""
+                        {"customer":"Billy", "amount":5.00, "date":"2023-03-01"}
+                        """.getBytes());
+            }
+
+            @Override
+            public OutputStream getResponseBody() {
+                return null;
+            }
+
+            @Override
+            public void sendResponseHeaders(int rCode, long responseLength) throws IOException {
+
+            }
+
+            @Override
+            public InetSocketAddress getRemoteAddress() {
+                return null;
+            }
+
+            @Override
+            public int getResponseCode() {
+                return 0;
+            }
+
+            @Override
+            public InetSocketAddress getLocalAddress() {
+                return null;
+            }
+
+            @Override
+            public String getProtocol() {
+                return "";
+            }
+
+            @Override
+            public Object getAttribute(String name) {
+                return null;
+            }
+
+            @Override
+            public void setAttribute(String name, Object value) {
+
+            }
+
+            @Override
+            public void setStreams(InputStream i, OutputStream o) {
+
+            }
+
+            @Override
+            public HttpPrincipal getPrincipal() {
+                return null;
+            }
+        });
+    }
+
+    private static void processConfigurationSettings(String[] args, InvoiceMicroservice invoiceMicroservice) {
+        if (args.length < 1) invoiceMicroservice.portNumber = 8090;
+        if( args.length >= 1 ) invoiceMicroservice.portNumber = Integer.parseInt(args[ConfigurationArgumentIndices.INVOICE_SERVICE_PORT]);
+        if( args.length >= 2 ) invoiceMicroservice.abacusPortNumber = Integer.parseInt(args[ConfigurationArgumentIndices.ABACUS_SERVICE_PORT]);
+        if (args.length > ConfigurationArgumentIndices.ARRAY_SIZE) {
+            System.out.println("Invalid number of arguments. Expected " + ConfigurationArgumentIndices.ARRAY_SIZE + " but received " + args.length);
+            System.exit(1);
+        }
     }
 
     /**
@@ -125,9 +266,10 @@ public class InvoiceMicroservice {
          * Handle POST requests to create a new invoice
          */
         private void handleCreateInvoice(HttpExchange exchange) throws IOException {
+            callAbacus(exchange);
+
             // In a real application, we would parse the JSON from the request body
             // For simplicity, we'll just create a dummy invoice
-
             Map<String, Object> newInvoice = new HashMap<>();
             newInvoice.put("id", "INV-" + (invoices.size() + 1));
             newInvoice.put("customer", "New Customer");
@@ -138,6 +280,38 @@ public class InvoiceMicroservice {
             invoices.add(newInvoice);
 
             sendResponse(exchange, 201, convertToJson(newInvoice));
+        }
+
+        private void callAbacus(HttpExchange exchange) throws IOException {
+            AbacusClient abacusClient = new AbacusClient("http://localhost:" + abacusPortNumber);
+            System.out.println("AbacusClient connecting to service at " + abacusClient.getBasePath());
+
+            InputStream inputStream = exchange.getRequestBody();
+            String body = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+            System.out.println("Received request body: " + body);
+            // Deserialize JSON into InvoiceRequest
+            ObjectMapper objectMapper = new ObjectMapper();
+            objectMapper.registerModule(new JavaTimeModule());
+            objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+
+            AbacusClient.InvoiceRequest invoiceRequest = objectMapper.readValue(body, AbacusClient.InvoiceRequest.class);
+            System.out.println("InvoiceRequest deserialized: " + invoiceRequest);
+            boolean successfullyProcessed = false;
+            // Call the upstream API we depend on
+            try {
+                AbacusClient.ProcessResponse response = abacusClient.processInvoice(invoiceRequest);
+                successfullyProcessed = response.getStatus().equals("ACCEPTED");
+                if (successfullyProcessed) System.out.println("AbacusClient processed invoice successfully");
+                else System.out.println("AbacusClient failed to process invoice");
+
+            } catch (Throwable e) {
+                System.out.println("AbacusClient interrupted while processing invoice");
+                e.printStackTrace();
+            }
+
+            if (!successfullyProcessed) {
+                sendResponse(exchange, 503, "{\"error\": \"Internal Server Error\"}");
+            }
         }
 
         /**
