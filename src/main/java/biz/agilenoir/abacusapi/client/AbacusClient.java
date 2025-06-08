@@ -67,7 +67,7 @@ public class AbacusClient {
 
         HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
-        if (response.statusCode() != 200) {
+        if (response.statusCode() != 200 && response.statusCode() != 201) {
             throw new IOException("Unexpected status code: " + response.statusCode());
         }
 
@@ -107,23 +107,18 @@ public class AbacusClient {
         public String getCustomer() {
             return customer;
         }
-
         public void setCustomer(String customer) {
             this.customer = customer;
         }
-
         public Double getAmount() {
             return amount;
         }
-
         public void setAmount(Double amount) {
             this.amount = amount;
         }
-
         public LocalDate getDate() {
             return date;
         }
-
         public void setDate(LocalDate date) {
             this.date = date;
         }

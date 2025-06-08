@@ -152,21 +152,64 @@ public class InvoiceTest {
             .body("error", containsString("not found"));
     }
 
-    @org.junit.jupiter.api.Disabled("until modernize pom")
+    //@org.junit.jupiter.api.Disabled("until modernize pom")
     @Test
     @Order(5)
     @DisplayName("Test create new invoice (depends on Abacus)")
-    public void testCreateInvoice() {
+    public void testCreateInvoice() throws Throwable{
             System.out.println("\nTesting create new invoice:");
-        // Setup mock response.
+        // Setup mock response. Lance: does this only server one call or serves many?
         stubFor(post(urlEqualTo("/api/process"))
                 .willReturn(aResponse()
-                        .withStatus(200)
+                        .withStatus(201)
                         .withHeader("Content-Type", "application/json")
-                        .withBody("{\"transactionId\": \"TRX-12345\", \"status\": \"NEW\", \"message\": \"Invoice processed successfully\"}")));
+                        .withBody("{\"transactionId\": \"TRX-12345\", \"status\": \"ACCEPTED\", \"message\": \"Invoice processed successfully\"}")));
+        Thread.sleep(1000);
+
+/*
+        schemas:
+        Invoice:
+        type: object
+        properties:
+        id:
+        type: string
+        example: INV-001
+        customer:
+        type: string
+        example: Acme Corp
+        amount:
+        type: number
+        format: double
+        example: 1250.00
+        date:
+        type: string
+        format: date
+        example: 2023-01-15
+        status:
+        type: string
+        enum: [NEW, PENDING, PAID]
+        example: PAID
+        required:
+        - id
+                - customer
+                - amount
+                - date
+                - status
+*/
+
+        String invoiceToCreate = """
+                {
+                "id":"INV-001",
+                "customer":"New Customer",
+                "amount":400.00,
+                "date":"2025-01-01",
+                "status":"NEW"
+                }
+                """;
         // Test client.
         given()
                     .when()
+                    .body(invoiceToCreate)
                     .post("/api/invoices")
                     .then()
                     .statusCode(201)

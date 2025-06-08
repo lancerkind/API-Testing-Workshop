@@ -11,6 +11,7 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,6 +25,38 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * It implements a simple invoice management system as described in the README.
  */
 public class InvoiceMicroservice {
+
+    public static class InvoiceRequest {
+        private String id;
+        private String customer;
+        private Double amount;
+        private LocalDate date;
+        private String status;
+
+        public String getId() { return id; }
+        public void setId(String id) {  this.id = id;  }
+        public String getCustomer() {
+            return customer;
+        }
+        public void setCustomer(String customer) {
+            this.customer = customer;
+        }
+        public Double getAmount() {
+            return amount;
+        }
+        public void setAmount(Double amount) {
+            this.amount = amount;
+        }
+        public LocalDate getDate() {
+            return date;
+        }
+        public void setDate(LocalDate date) {
+            this.date = date;
+        }
+        public String getStatus() { return status; }
+        public void setStatus(String status) { this.status = status; }
+    }
+
 
     public static class ConfigurationArgumentIndices {
         public static final int ARRAY_SIZE = 2;  // If adding more indices, increase this number
@@ -69,7 +102,7 @@ public class InvoiceMicroservice {
     }
 
     private static void testingWireMockClient() throws IOException {
-        new InvoiceHandler().callAbacus(new HttpExchange() {
+        new InvoiceHandler().invoiceProcessedByAbacus(new HttpExchange() {
             @Override
             public Headers getRequestHeaders() {
                 return null;
@@ -266,7 +299,9 @@ public class InvoiceMicroservice {
          * Handle POST requests to create a new invoice
          */
         private void handleCreateInvoice(HttpExchange exchange) throws IOException {
-            callAbacus(exchange);
+            if (!invoiceProcessedByAbacus(exchange)) {
+                    sendResponse(exchange, 503, "{\"error\": \"Internal Server Error\"}");
+            }
 
             // In a real application, we would parse the JSON from the request body
             // For simplicity, we'll just create a dummy invoice
@@ -282,36 +317,67 @@ public class InvoiceMicroservice {
             sendResponse(exchange, 201, convertToJson(newInvoice));
         }
 
-        private void callAbacus(HttpExchange exchange) throws IOException {
+        /**
+         *
+         * @param exchange request from client of microservice
+         * @return True if Abacus successfully processed request. False if otherwires.
+         * @throws IOException
+         */
+        private boolean invoiceProcessedByAbacus(HttpExchange exchange) {
+            // prepare the request body
+            String body;
+
+            try {
+                InputStream inputStream = exchange.getRequestBody();
+                body = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+                inputStream.close();
+            } catch (Exception e) {
+                System.out.println("Request to InvoiceService interrupted");
+                e.printStackTrace();
+                return false;
+            }
+
+            if (body.length() == 0) {
+                System.out.println("Empty body received in invoice request. Aborting to call Abacus with a bad request.");
+                return false;
+            }
+            System.out.println("Received request body: " + body);
+
+            // Prepare the abacus request
             AbacusClient abacusClient = new AbacusClient("http://localhost:" + abacusPortNumber);
             System.out.println("AbacusClient connecting to service at " + abacusClient.getBasePath());
-
-            InputStream inputStream = exchange.getRequestBody();
-            String body = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-            System.out.println("Received request body: " + body);
             // Deserialize JSON into InvoiceRequest
             ObjectMapper objectMapper = new ObjectMapper();
-            objectMapper.registerModule(new JavaTimeModule());
+            objectMapper.registerModule(new JavaTimeModule()); // necessary to work with DateTime with Jackson.
             objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
 
-            AbacusClient.InvoiceRequest invoiceRequest = objectMapper.readValue(body, AbacusClient.InvoiceRequest.class);
-            System.out.println("InvoiceRequest deserialized: " + invoiceRequest);
-            boolean successfullyProcessed = false;
-            // Call the upstream API we depend on
             try {
-                AbacusClient.ProcessResponse response = abacusClient.processInvoice(invoiceRequest);
-                successfullyProcessed = response.getStatus().equals("ACCEPTED");
-                if (successfullyProcessed) System.out.println("AbacusClient processed invoice successfully");
-                else System.out.println("AbacusClient failed to process invoice");
+                InvoiceRequest invoiceRequest = objectMapper.readValue(body, InvoiceRequest.class);
+                // map request to the upstream dependency, AbacusClient's invoice request
+                System.out.println("InvoiceRequest deserialized: " + invoiceRequest);
+                AbacusClient.InvoiceRequest abacusInvoiceRequest = new AbacusClient.InvoiceRequest();
+                // copy data into abacusinvoiceRequest which only requires customer, amount and date to process the invoice.
+
+                abacusInvoiceRequest.setCustomer(invoiceRequest.getCustomer());
+                abacusInvoiceRequest.setAmount(invoiceRequest.getAmount());
+                abacusInvoiceRequest.setDate(invoiceRequest.getDate());
+
+                // Call the upstream API we depend on
+                AbacusClient.ProcessResponse response = abacusClient.processInvoice(abacusInvoiceRequest);
+
+                if (response.getStatus().equals("ACCEPTED")) {
+                    System.out.println("Abacus processed invoice successfully");
+                    return true;
+                } else {
+                    System.out.println("Abacus failed to process invoice");
+                    return false;
+                }
 
             } catch (Throwable e) {
                 System.out.println("AbacusClient interrupted while processing invoice");
                 e.printStackTrace();
             }
-
-            if (!successfullyProcessed) {
-                sendResponse(exchange, 503, "{\"error\": \"Internal Server Error\"}");
-            }
+            return false;
         }
 
         /**
