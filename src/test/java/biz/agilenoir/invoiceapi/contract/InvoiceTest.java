@@ -26,11 +26,9 @@ import static org.hamcrest.Matchers.*;
 public class InvoiceTest {
     private static final int portNumber = 8091;
     private static final String BASE_URL = "http://localhost:" + portNumber;
-    private static Thread serverThread;
     private static WireMockServer wireMockServer;  // used for tests that depend on Abacus
 
     private static void setupVirtualAbacusService() {
-        // Start WireMock server
         wireMockServer = new WireMockServer(WireMockConfiguration.options().dynamicPort());
         wireMockServer.start();
         WireMock.configureFor("localhost", wireMockServer.port());
@@ -42,7 +40,7 @@ public class InvoiceTest {
         setupVirtualAbacusService();
         // Start the API server
         System.out.println("Starting API server...");
-        serverThread = new Thread(() -> {
+        Thread serverThread = new Thread(() -> {
             String[] serviceConfiguration = new String[InvoiceMicroservice.ConfigurationArgumentIndices.ARRAY_SIZE];      // pass in service configuration
             serviceConfiguration[InvoiceMicroservice.ConfigurationArgumentIndices.INVOICE_SERVICE_PORT] = String.valueOf(portNumber);
             serviceConfiguration[InvoiceMicroservice.ConfigurationArgumentIndices.ABACUS_SERVICE_PORT] = String.valueOf(wireMockServer.port());
@@ -55,7 +53,7 @@ public class InvoiceTest {
         });
         serverThread.start();
 
-        // Wait for server to start
+        // Wait for the server to start
         try {
             Thread.sleep(1000);
         } catch (InterruptedException e) {
@@ -79,7 +77,6 @@ public class InvoiceTest {
     }
 
     @Test
-    @Order(1)
     @DisplayName("Test health endpoint")
     public void testHealthEndpoint() {
         System.out.println("\nTesting health endpoint:");
@@ -94,7 +91,6 @@ public class InvoiceTest {
     }
 
     @Test
-    @Order(2)
     @DisplayName("Test get all invoices")
     public void testGetAllInvoices() {
         System.out.println("\nTesting get all invoices:");
@@ -121,7 +117,6 @@ public class InvoiceTest {
     }
 
     @Test
-    @Order(3)
     @DisplayName("Test get invoice by ID")
     public void testGetInvoiceById() {
         System.out.println("\nTesting get invoice by ID:");
@@ -138,7 +133,6 @@ public class InvoiceTest {
     }
 
     @Test
-    @Order(4)
     @DisplayName("Test get non-existent invoice")
     public void testGetNonExistentInvoice() {
         System.out.println("\nTesting get non-existent invoice:");
@@ -154,49 +148,17 @@ public class InvoiceTest {
 
     //@org.junit.jupiter.api.Disabled("until modernize pom")
     @Test
-    @Order(5)
     @DisplayName("Test create new invoice (depends on Abacus)")
-    public void testCreateInvoice() throws Throwable{
+    public void testCreateInvoice(){
             System.out.println("\nTesting create new invoice:");
-        // Setup mock response. Lance: does this only server one call or serves many?
+        // Setup mock response.
         stubFor(post(urlEqualTo("/api/process"))
                 .willReturn(aResponse()
                         .withStatus(201)
                         .withHeader("Content-Type", "application/json")
                         .withBody("{\"transactionId\": \"TRX-12345\", \"status\": \"ACCEPTED\", \"message\": \"Invoice processed successfully\"}")));
-        Thread.sleep(1000);
 
-/*
-        schemas:
-        Invoice:
-        type: object
-        properties:
-        id:
-        type: string
-        example: INV-001
-        customer:
-        type: string
-        example: Acme Corp
-        amount:
-        type: number
-        format: double
-        example: 1250.00
-        date:
-        type: string
-        format: date
-        example: 2023-01-15
-        status:
-        type: string
-        enum: [NEW, PENDING, PAID]
-        example: PAID
-        required:
-        - id
-                - customer
-                - amount
-                - date
-                - status
-*/
-
+        // See InvoiceAPISpec for schema.
         String invoiceToCreate = """
                 {
                 "id":"INV-001",

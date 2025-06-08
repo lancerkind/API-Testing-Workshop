@@ -4,12 +4,10 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.sun.net.httpserver.*;
 
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
-import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -98,119 +96,6 @@ public class InvoiceMicroservice {
         System.out.println("  GET  /api/invoices - List all invoices");
         System.out.println("  GET  /api/invoices?id={id} - Get invoice by ID");
         System.out.println("  POST /api/invoices - Create a new invoice (send JSON in request body)");
-//        testingWireMockClient();  // delete this and the method when satisfied as this is for debugging perposes.
-    }
-
-    private static void testingWireMockClient() throws IOException {
-        new InvoiceHandler().invoiceProcessedByAbacus(new HttpExchange() {
-            @Override
-            public Headers getRequestHeaders() {
-                return null;
-            }
-
-            @Override
-            public Headers getResponseHeaders() {
-                return null;
-            }
-
-            @Override
-            public URI getRequestURI() {
-                return null;
-            }
-
-            @Override
-            public String getRequestMethod() {
-                return "";
-            }
-
-            @Override
-            public HttpContext getHttpContext() {
-                return null;
-            }
-
-            @Override
-            public void close() {
-
-            }
-
-            @Override
-            public InputStream getRequestBody() {
-                /*
-                schemas:
-                InvoiceRequest:
-                type: object
-                properties:
-                customer:
-                type: string
-                example: New Customer
-                amount:
-                type: number
-                format: double
-                example: 500.00
-                date:
-                type: string
-                format: date
-                example: 2023-03-01
-                required:
-                        - customer
-                        - amount
-                        - date
-                 */
-                return new ByteArrayInputStream("""
-                        {"customer":"Billy", "amount":5.00, "date":"2023-03-01"}
-                        """.getBytes());
-            }
-
-            @Override
-            public OutputStream getResponseBody() {
-                return null;
-            }
-
-            @Override
-            public void sendResponseHeaders(int rCode, long responseLength) throws IOException {
-
-            }
-
-            @Override
-            public InetSocketAddress getRemoteAddress() {
-                return null;
-            }
-
-            @Override
-            public int getResponseCode() {
-                return 0;
-            }
-
-            @Override
-            public InetSocketAddress getLocalAddress() {
-                return null;
-            }
-
-            @Override
-            public String getProtocol() {
-                return "";
-            }
-
-            @Override
-            public Object getAttribute(String name) {
-                return null;
-            }
-
-            @Override
-            public void setAttribute(String name, Object value) {
-
-            }
-
-            @Override
-            public void setStreams(InputStream i, OutputStream o) {
-
-            }
-
-            @Override
-            public HttpPrincipal getPrincipal() {
-                return null;
-            }
-        });
     }
 
     private static void processConfigurationSettings(String[] args, InvoiceMicroservice invoiceMicroservice) {
@@ -321,24 +206,21 @@ public class InvoiceMicroservice {
          *
          * @param exchange request from client of microservice
          * @return True if Abacus successfully processed request. False if otherwires.
-         * @throws IOException
          */
         private boolean invoiceProcessedByAbacus(HttpExchange exchange) {
             // prepare the request body
             String body;
 
-            try {
-                InputStream inputStream = exchange.getRequestBody();
+            try (InputStream inputStream = exchange.getRequestBody()) {
                 body = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-                inputStream.close();
             } catch (Exception e) {
-                System.out.println("Request to InvoiceService interrupted");
+                System.err.println("Request to InvoiceService interrupted");
                 e.printStackTrace();
                 return false;
             }
 
             if (body.length() == 0) {
-                System.out.println("Empty body received in invoice request. Aborting to call Abacus with a bad request.");
+                System.err.println("Empty body received in invoice request. Aborting to call Abacus with a bad request.");
                 return false;
             }
             System.out.println("Received request body: " + body);

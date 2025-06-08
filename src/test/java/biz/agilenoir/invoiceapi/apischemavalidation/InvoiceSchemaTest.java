@@ -1,9 +1,14 @@
 package biz.agilenoir.invoiceapi.apischemavalidation;
 
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static io.restassured.module.jsv.JsonSchemaValidator.matchesJsonSchemaInClasspath;
 import static io.restassured.RestAssured.*;
 
 import biz.agilenoir.invoiceapi.InvoiceMicroservice;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.WireMock;
+import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -14,16 +19,32 @@ import java.io.IOException;
 public class InvoiceSchemaTest {
     private static final int portNumber = 8090;
     private static final String BASE_URL = "http://localhost:" + portNumber;
-    private static Thread serverThread;
+    private static WireMockServer wireMockServer;
+
+    private static void setupVirtualAbacusService() {
+        wireMockServer = new WireMockServer(WireMockConfiguration.options().dynamicPort());
+        wireMockServer.start();
+        WireMock.configureFor("localhost", wireMockServer.port());
+        System.out.println("WireMock server started on port: " + wireMockServer.port());
+    }
+
+    private static void teardownVirtualAbacusService() {
+        wireMockServer.stop();
+        System.out.println("WireMock server stopped");
+    }
 
     @BeforeAll
     public static void setup() {
+        setupVirtualAbacusService();
         // Start the API server
         System.out.println("Starting API server for OpenAPI validation tests...");
-        serverThread = new Thread(() -> {
+        Thread serverThread = new Thread(() -> {
 
             try {
-                InvoiceMicroservice.main(new String[]{String.valueOf(portNumber)});
+                String [] configuration = new String [2];
+                configuration[InvoiceMicroservice.ConfigurationArgumentIndices.INVOICE_SERVICE_PORT] = Integer.toString(portNumber);
+                configuration[InvoiceMicroservice.ConfigurationArgumentIndices.ABACUS_SERVICE_PORT] = Integer.toString(wireMockServer.port());
+                InvoiceMicroservice.main(configuration);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -44,6 +65,7 @@ public class InvoiceSchemaTest {
 
     @AfterAll
     public static void tearDown() {
+        teardownVirtualAbacusService();
         System.out.println("OpenAPI validation tests completed");
     }
 
@@ -83,10 +105,15 @@ public class InvoiceSchemaTest {
             .body(matchesJsonSchemaInClasspath("schemas/invoice-schema.json"));
     }
 
-    @org.junit.jupiter.api.Disabled("Until I add mocking")
     @Test
-    @DisplayName("Validate Create Invoice Endpoint Response Against Schema")
+    @DisplayName("Validate Create Invoice Endpoint Response Against Schema which depends on Abacus service.")
     void validateCreateInvoiceAgainstSchema() {
+        stubFor(post(urlEqualTo("/api/process"))
+                .willReturn(aResponse()
+                        .withStatus(201)
+                        .withHeader("Content-Type", "application/json")
+                        .withBody("{\"transactionId\": \"TRX-12345\", \"status\": \"ACCEPTED\", \"message\": \"Invoice processed successfully\"}")));
+
         given()
             .baseUri(BASE_URL)
             .contentType("application/json")
