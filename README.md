@@ -16,8 +16,8 @@ The tests assume that port 8090 and 8091 are free.
 This repository contains a simple API application that demonstrates the concepts described below.
 
 ## Project Structure
-- `src/main/resources/openapi.yaml` - OpenAPI specification for the API
-- `src/main/java/biz/agilenoir/invoiceapi/Main.java` - The main application that implements a simple invoice API
+- `src/main/resources/InvoiceAPISpec.yaml` - OpenAPI specification for the invoice microservice
+- `src/main/java/biz/agilenoir/invoiceapi/InvoiceMicroservice.java` - The main application that implements a simple invoice API
 - `src/test/java/biz/agilenoir/invoiceapi/contract/InvoiceTest.java` - A test that demonstrates how to test the 
 contract from the API producer's perspective.
 - `src/test/java/biz/agilenoir/invoiceapi/apischemavalidation/InvoiceSchemaTest.java` - A test that checks that the 
@@ -26,11 +26,11 @@ schema is correctly represented by the controller.
 ## Running the Application
 To run the application:
 ```
-javac src/main/java/biz/agilenoir/invoiceapi/Main.java
+javac src/main/java/biz/agilenoir/invoiceapi/InvoiceMicroservice.java
 java -cp src/main/java biz.agilenoir.invoiceapi.InvoiceMicroservice
 ```
 
-The server will start on port 8090 (default, or pass a port number as an argument) with the following endpoints:
+The server will start on port 8090 (default, or pass a port number as an argument) and has the following endpoints:
 - `GET /api/health` - Health check endpoint
 - `GET /api/invoices` - List all invoices
 - `GET /api/invoices?id={id}` - Get invoice by ID
@@ -79,11 +79,12 @@ The tests fail for the meantime as the API has yet to be built so these tests wi
 their CI system doesn’t declare the build as broken.
 - Day by day, Ledgerlicious will implement the API by performing TDD: create unit tests and acceptance tests. These
 tests will be run into their CI environment.
-- Ledgerlicious has a dependency on data provided by team Abacus. Abacus is a slow legacy system which would greatly impact 
-the speed of Ledgerlicious’s producer tests, so they mock this upstream dependency with WireMock.
+  - Ledgerlicious has a dependency on data provided by team Abacus (`src/main/resources/AbacusAPISpec.yaml`). 
+  Abacus is a slow legacy system which would greatly impact the speed of Ledgerlicious’s automated tests, 
+  so they mock this upstream dependency with WireMock (see `InvoiceTest.testCreateInvoice()`).
 
-Over time, iteration by iteration (sprint by sprint), API functionality is built out by Ledgerlicious, so as a result, 
-the tests produced by Ledgerlicious and Razzmatazz are switched from pending/ignored to actually testing 
+Over time, iteration by iteration (sprint by sprint), API functionality is built out by Ledgerlicious.  
+As a result, the tests produced by Ledgerlicious and Razzmatazz are switched from pending/ignored to actually testing 
 against a real endpoint released by Ledgerlicious. Occasionally a producer test passes but then still fails a 
 consumer test, in which case, Razzmatazz and Ledgerlicious have conversations on why that has happened and 
 make adjustments.
