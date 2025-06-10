@@ -1,6 +1,6 @@
 As with all test automation, there are several levels of testing that can be done in API testing.
 Here is a lab which illustrates the "Why" of certain levels of testing, along with examples to 
-illustrate "How."  
+illustrate "How."
 
 This particular workshop will use the following tools:
 * Java for the implementation language
