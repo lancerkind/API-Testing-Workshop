@@ -14,6 +14,7 @@ The tests assume that port 8090 and 8091 are free.
 
 # Getting Started
 This repository contains a simple API application that demonstrates the concepts described below.
+![architecture diagram showing the three layers: consumer, producer, and dependency.](architecture.png "Architecture")
 
 ## Project Structure
 - `src/main/resources/InvoiceAPISpec.yaml` - OpenAPI specification for the invoice microservice
