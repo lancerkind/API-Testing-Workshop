@@ -91,4 +91,4 @@ consumer test, in which case, Razzmatazz and Ledgerlicious have conversations on
 make adjustments.
 
 # More Resources
-Listen to this Agile Thoughts interview about [contract testing wyth Bryan Finster](https://agilenoir.biz/en/agilethoughts/contract-testing-your-apis-with-bryan-finster/)
+Listen to this Agile Thoughts interview about [contract testing with Bryan Finster](https://agilenoir.biz/en/agilethoughts/contract-testing-your-apis-with-bryan-finster/) ![podcast cover image](agile_thoughts.png)
