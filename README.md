@@ -89,3 +89,6 @@ As a result, the tests produced by Ledgerlicious and Razzmatazz are switched fro
 against a real endpoint released by Ledgerlicious. Occasionally a producer test passes but then still fails a 
 consumer test, in which case, Razzmatazz and Ledgerlicious have conversations on why that has happened and 
 make adjustments.
+
+# More Resources
+Listen to this Agile Thoughts interview about [contract testing wyth Bryan Finster](https://agilenoir.biz/en/agilethoughts/contract-testing-your-apis-with-bryan-finster/)
